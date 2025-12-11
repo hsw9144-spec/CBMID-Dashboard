@@ -2,41 +2,38 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import os
 import platform
 from io import BytesIO
 from matplotlib import font_manager, rc
 
 # ==========================================
-# 1. 폰트 설정 (서버/로컬 호환)
+# 1. 폰트 설정
 # ==========================================
 def set_font():
-    font_file = "NanumGothic.ttf"
-    if os.path.exists(font_file):
-        font_name = font_manager.FontProperties(fname=font_file).get_name()
-        rc('font', family=font_name)
-    else:
-        try:
-            if platform.system() == "Windows":
-                rc('font', family="Malgun Gothic")
-            elif platform.system() == "Darwin":
-                rc('font', family="AppleGothic")
-            else:
-                rc('font', family="NanumGothic")
-        except: pass
+    try:
+        if platform.system() == "Windows":
+            font_path = "c:/Windows/Fonts/malgun.ttf"
+            font_name = font_manager.FontProperties(fname=font_path).get_name()
+            rc('font', family=font_name)
+        elif platform.system() == "Darwin":
+            rc('font', family="AppleGothic")
+        else:
+            rc('font', family="NanumGothic")
+    except: pass
     plt.rcParams['axes.unicode_minus'] = False
 
 set_font()
 st.set_page_config(page_title="CBMID Dashboard", layout="wide")
 
 # ==========================================
-# 2. 다국어 사전 & 번역 로직
+# 2. 다국어 사전
 # ==========================================
 TEXT = {
     "KR": {
         "title": "🌍 CBMID 글로벌 인재 지도",
         "subtitle": "AI 시대, 인류의 숨겨진 재능과 소명을 시각화하다",
         "sidebar_title": "🧬 CBMID 엔진",
+        "upload_label": "CSV 데이터 업로드 (KOR/ENG)",
         "warn_upload": "👈 왼쪽 사이드바에 CSV 파일을 업로드해주세요.",
         "tab1": "📊 전략 지도 (Strategic Matrix)",
         "tab2": "👤 개인 분석 (Individual Report)",
@@ -80,15 +77,14 @@ TEXT = {
             4: "당신은 **'인류애와 포용'**의 단계에 있습니다.",
             5: "당신은 **'소명과 초월'**의 에너지를 따릅니다."
         },
-        # [번역용 사전]
-        "trans_adj": {
-            "Shadow": "그림자", "Survival": "생존형", "Responsible": "책임감 있는",
-            "Contributing": "공헌하는", "Humanitarian": "인류애 넘치는", "Divine": "천상의"
-        },
-        "trans_noun": {
+        "archetypes": {
             "Storyteller": "스토리텔러", "Strategist": "전략가", "Architect": "설계자",
             "Pioneer": "개척자", "Maestro": "마에스트로", "Mediator": "중재자",
-            "Philosopher": "철학자", "Guardian": "수호자", "Visionary": "선각자", "Explorer": "탐구자"
+            "Philosopher": "철학자", "Guardian": "수호자", "Visionary": "선각자"
+        },
+        "adjectives": {
+            "Shadow": "그림자", "Survival": "생존형", "Responsible": "책임감 있는",
+            "Contributing": "공헌하는", "Humanitarian": "인류애 넘치는", "Divine": "천상의"
         },
         "p_title": "💊 CBMID AI 처방전",
         "p_danger": "⚠️ 고위험 / 고잠재력 감지",
@@ -102,6 +98,7 @@ TEXT = {
         "title": "🌍 CBMID Global Talent Map",
         "subtitle": "Visualizing Hidden Talents & Calling in the AI Era",
         "sidebar_title": "🧬 CBMID Engine",
+        "upload_label": "Upload CSV Data (KOR/ENG)",
         "warn_upload": "👈 Please upload CSV files in the sidebar.",
         "tab1": "📊 Strategic Matrix",
         "tab2": "👤 Individual Report",
@@ -125,35 +122,59 @@ TEXT = {
         "radar_labels": ["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"],
         "int_desc": {
             "Linguistic": "You have the power to move hearts with words.",
-            "Logical": "You possess a strategic mind.", "Spatial": "You can visualize the invisible.",
-            "Bodily": "You turn thoughts into action.", "Musical": "You sense rhythms and emotions.",
-            "Interpersonal": "You instinctively understand others.", "Intrapersonal": "You have profound self-awareness.",
-            "Naturalist": "You have a keen eye for patterns.", "Existential": "You are a visionary."
+            "Logical": "You possess a strategic mind that finds patterns in chaos.",
+            "Spatial": "You can visualize the invisible blueprint of the future.",
+            "Bodily": "You turn thoughts into action with physical precision.",
+            "Musical": "You sense rhythms and emotions that others miss.",
+            "Interpersonal": "You instinctively understand others' emotions.",
+            "Intrapersonal": "You have profound self-awareness and inner strength.",
+            "Naturalist": "You have a keen eye for patterns in nature or data.",
+            "Existential": "You are a visionary who ponders fundamental questions."
         },
-        "lvl_desc": {1: "Focus: **'Survival & Stability'**.", 2: "Driven by **'Responsibility'**.", 3: "Value **'Contribution'**.", 4: "Guided by **'Humanity'**.", 5: "Aligned with **'Divine Calling'**."},
-        # 영어는 번역 불필요 (그대로 매핑)
-        "trans_adj": {k: k for k in ["Shadow", "Survival", "Responsible", "Contributing", "Humanitarian", "Divine"]},
-        "trans_noun": {k: k for k in ["Storyteller", "Strategist", "Architect", "Pioneer", "Maestro", "Mediator", "Philosopher", "Guardian", "Visionary", "Explorer"]},
-        "p_title": "💊 CBMID AI Prescription", "p_danger": "⚠️ High Risk / High Potential Detected", "p_ideal": "🌟 Ideal Leader Model", "p_grow": "💡 Growing Talent", "p_desc_danger": "Exceptional talent, but trapped in survival mode.", "p_desc_ideal": "Harmony of Competence and Conscience.", "p_desc_grow": "Growing steadily with sincerity."
+        "lvl_desc": {
+            1: "Your current focus is on **'Survival & Stability'**.",
+            2: "You are driven by **'Responsibility'**.",
+            3: "You value **'Contribution'** and cooperation.",
+            4: "You are guided by **'Humanity'** and harmony.",
+            5: "You are aligned with a **'Divine Calling'**."
+        },
+        "archetypes": {k: k for k in ["Storyteller", "Strategist", "Architect", "Pioneer", "Maestro", "Mediator", "Philosopher", "Guardian", "Visionary"]},
+        "adjectives": {k: k for k in ["Shadow", "Survival", "Responsible", "Contributing", "Humanitarian", "Divine"]},
+        "p_title": "💊 CBMID AI Prescription",
+        "p_danger": "⚠️ High Risk / High Potential Detected",
+        "p_ideal": "🌟 Ideal Leader Model",
+        "p_grow": "💡 Growing Talent",
+        "p_desc_danger": "Exceptional talent, but trapped in survival mode or lacking ethics.",
+        "p_desc_ideal": "A leader with perfect harmony of Competence and Conscience.",
+        "p_desc_grow": "A talent growing steadily with sincerity."
     }
 }
-
-MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
-ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
-CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
 
 # ==========================================
 # 3. 로직 및 분석
 # ==========================================
-def load_data_safe(file):
-    if file is None: return None
-    bytes_data = file.getvalue()
-    try: return pd.read_csv(BytesIO(bytes_data), encoding='utf-8')
-    except:
-        try: return pd.read_csv(BytesIO(bytes_data), encoding='cp949')
-        except: return None
+MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
+ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
+CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
 
-def analyze_data(df):
+def load_data_safe(file):
+    """파일을 바이트로 읽어서 pandas로 변환 (BytesIO 방식)"""
+    if file is None: return None
+    try:
+        # 파일 내용을 바이트로 읽음
+        bytes_data = file.getvalue()
+        
+        # 1차 시도: utf-8
+        try:
+            return pd.read_csv(BytesIO(bytes_data), encoding='utf-8')
+        except UnicodeDecodeError:
+            # 2차 시도: cp949 (한글 윈도우)
+            return pd.read_csv(BytesIO(bytes_data), encoding='cp949')
+    except Exception as e:
+        st.error(f"❌ 파일 읽기 실패: {e}")
+        return None
+
+def analyze_data(df, lang):
     results = []
     cols = list(df.columns)
     name_idx = next((i for i, c in enumerate(cols) if "name" in c.lower() or "성함" in c), -1)
@@ -163,6 +184,8 @@ def analyze_data(df):
     potential_cols = cols[name_idx+1 : crisis_idx]
     mi_cols = [c for c in potential_cols if c.strip()[0].isdigit()]
     
+    t = TEXT[lang]
+
     for idx, row in df.iterrows():
         scores = {}
         curr = 0
@@ -185,20 +208,18 @@ def analyze_data(df):
         elif "4." in ans or "Humanity" in ans or "인류애" in ans: lvl = 4
         elif "5." in ans or "Divinity" in ans or "소명" in ans: lvl = 5
         
-        # 내부 데이터는 항상 영어 원문으로 저장
         raw_adj = CONSCIENCE_ADJECTIVES_RAW.get(lvl, "Shadow")
         raw_noun = ARCHETYPE_NOUNS_RAW.get(top1[0], "Explorer")
         
+        adj = t["adjectives"].get(raw_adj, raw_adj)
+        noun = t["archetypes"].get(raw_noun, raw_noun)
+        
+        archetype = f"{adj} {noun}"
         name = str(row[cols[name_idx]]).strip()
         
         results.append({
-            "Name": name, 
-            "Raw_Adj": raw_adj,   # 원문 저장
-            "Raw_Noun": raw_noun, # 원문 저장
-            "Level": lvl, 
-            "Scores": scores, 
-            "Top1_Score": top1[1], 
-            "Top1_Raw": top1[0]
+            "Name": name, "Archetype": archetype, "Level": lvl, 
+            "Scores": scores, "Top1_Score": top1[1], "Top1_Raw": top1[0]
         })
     return results
 
@@ -210,16 +231,16 @@ st.sidebar.title("🧬 CBMID Engine")
 language = st.sidebar.radio("Language / 언어", ["English", "KR"], index=0)
 t = TEXT[language]
 
-st.sidebar.info(f"System Ready (v3.1)")
+st.sidebar.info(f"System Ready (v2.9)")
 
-uploaded_files = st.sidebar.file_uploader("Upload CSV Data (KOR/ENG)", accept_multiple_files=True, type="csv", key="csv_uploader")
+uploaded_files = st.sidebar.file_uploader(t['upload_label'], accept_multiple_files=True, type="csv", key="csv_uploader")
 
 all_users = []
 if uploaded_files:
     for file in uploaded_files:
         df = load_data_safe(file)
         if df is not None:
-            all_users.extend(analyze_data(df))
+            all_users.extend(analyze_data(df, language))
 
 st.title(t['title'])
 st.markdown(f"### {t['subtitle']}")
@@ -229,7 +250,7 @@ if not all_users:
 else:
     tab1, tab2 = st.tabs([t['tab1'], t['tab2']])
     
-    # --- [탭 1] 매트릭스 ---
+    # --- [탭 1] 매트릭스 차트 ---
     with tab1:
         st.subheader(f"{t['analysis_header']} {len(all_users)} {t['unit_person']}")
         plot_df = pd.DataFrame(all_users)
@@ -252,23 +273,20 @@ else:
             
         ax.scatter(plot_df['X_J'], plot_df['Y_J'], s=400, c=colors, alpha=0.85, edgecolors='black')
         
-        # 라벨 (다국어)
-        ax.set_title(t['matrix_title'], fontsize=20, weight='bold', pad=20, fontproperties=FONT_PROP)
+        ax.set_title(t['matrix_title'], fontsize=20, weight='bold', pad=20)
         zone_font = {'fontsize': 16, 'weight': 'bold', 'bbox': dict(facecolor='white', alpha=0.8, edgecolor='gray', boxstyle='round,pad=0.5')}
         
-        ax.text(29.8, 5.8, t['ideal'], color='green', ha='right', va='top', fontproperties=FONT_PROP, **zone_font)
-        ax.text(29.8, 0.2, t['danger'], color='red', ha='right', va='bottom', fontproperties=FONT_PROP, **zone_font)
-        ax.text(-3, 5.8, t['good'], color='blue', ha='left', va='top', fontproperties=FONT_PROP, **zone_font)
-        ax.text(-3, 0.2, t['potential'], color='#E67E22', ha='left', va='bottom', fontproperties=FONT_PROP, **zone_font)
+        ax.text(29.8, 5.8, t['ideal'], color='green', ha='right', va='top', **zone_font)
+        ax.text(29.8, 0.2, t['danger'], color='red', ha='right', va='bottom', **zone_font)
+        ax.text(-3, 5.8, t['good'], color='blue', ha='left', va='top', **zone_font)
+        ax.text(-3, 0.2, t['potential'], color='#E67E22', ha='left', va='bottom', **zone_font)
         
         ax.axhline(y=3, color='gray', alpha=0.3); ax.axvline(x=15, color='gray', alpha=0.3)
-        ax.set_xlabel(t['x_label'], fontsize=14, fontproperties=FONT_PROP)
-        ax.set_ylabel(t['y_label'], fontsize=14, fontproperties=FONT_PROP)
+        ax.set_xlabel(t['x_label'], fontsize=14); ax.set_ylabel(t['y_label'], fontsize=14)
         ax.set_ylim(0, 6); ax.set_xlim(-4, 30)
         ax.set_xticks([0, 5, 10, 15, 20, 25]); ax.set_xticklabels(['0', '5', '10', '15', '20', '25 (Max)'])
         ax.set_yticks([1, 2, 3, 4, 5]); ax.set_yticklabels(['Lvl 1', 'Lvl 2', 'Lvl 3', 'Lvl 4', 'Lvl 5'])
 
-        # 이름 배치 (Nami, Mathfinder 등 고정 위치)
         plot_df = plot_df.sort_values(by='X_J')
         for i, row in enumerate(plot_df.itertuples()):
             name = str(row.Name)
@@ -283,16 +301,16 @@ else:
             elif 'HSW' in name: txt_color, weight = '#8E44AD', 'bold'; off_y = 0.45
             elif 'Nami' in name: off_x, off_y, ha = 0, -0.5, 'center' 
                 
-            ax.text(x+off_x, y+off_y, prefix+name, color=txt_color, weight=weight, ha=ha, fontsize=11, fontproperties=FONT_PROP,
+            ax.text(x+off_x, y+off_y, prefix+name, color=txt_color, weight=weight, ha=ha, fontsize=11,
                     bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', pad=1.5))
         
         st.pyplot(fig)
-        fn = "CBMID_Matrix.png"
+        
+        fn = "CBMID_Chart_EN.png" if language == "English" else "CBMID_Chart_KR.png"
         img = BytesIO()
         fig.savefig(img, format='png', dpi=150, bbox_inches='tight')
         st.download_button(label=t['btn_download'], data=img, file_name=fn, mime="image/png")
 
-    # --- [탭 2] 개인별 분석 ---
     with tab2:
         user_list = [u['Name'] for u in all_users]
         selected = st.selectbox(t['select_user'], user_list)
@@ -309,16 +327,10 @@ else:
             ax_r.fill(ang, val, color=lc, alpha=0.2)
             ax_r.set_ylim(0, 25); ax_r.set_xticks(ang[:-1])
             
-            ax_r.set_xticklabels(t['radar_labels'], size=9, weight='bold', fontproperties=FONT_PROP)
+            if language == "KR": ax_r.set_xticklabels(["언어", "논리", "공간", "신체", "음악", "대인", "성찰", "자연", "실존"], size=9, weight='bold')
+            else: ax_r.set_xticklabels(["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"], size=9, weight='bold')
             
-            # [핵심 수정] 아키타입 이름 한글화 (화면 표시용)
-            raw_adj = target['Raw_Adj']
-            raw_noun = target['Raw_Noun']
-            display_adj = t['adjectives'].get(raw_adj, raw_adj)
-            display_noun = t['archetypes'].get(raw_noun, raw_noun)
-            display_archetype = f"{display_adj} {display_noun}"
-            
-            ax_r.set_title(display_archetype, y=1.1, size=15, weight='bold', fontproperties=FONT_PROP)
+            ax_r.set_title(target['Archetype'], y=1.1, size=15, weight='bold')
             st.pyplot(fig_r)
             
         with col2:
@@ -327,8 +339,7 @@ else:
             top1_display = t['mi_names'].get(top1_raw, top1_raw)
             lvl = target['Level']
             
-            # 텍스트 한글화
-            st.markdown(f"## 🧬 {display_archetype}")
+            st.markdown(f"## 🧬 {target['Archetype']}")
             st.info(f"**{t['rpt_top_int']}:** {top1_display} ({target['Top1_Score']}/25) | **{t['rpt_level']}:** {lvl}")
             
             st.markdown(f"### {t['h_superpower']}")
