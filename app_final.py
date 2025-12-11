@@ -2,28 +2,40 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import platform
 from io import BytesIO
 from matplotlib import font_manager, rc
 
 # ==========================================
-# 1. 폰트 설정
+# 1. 폰트 설정 (강제 로딩 방식)
 # ==========================================
 def set_font():
-    try:
-        if platform.system() == "Windows":
-            font_path = "c:/Windows/Fonts/malgun.ttf"
-            font_name = font_manager.FontProperties(fname=font_path).get_name()
-            rc('font', family=font_name)
-        elif platform.system() == "Darwin":
-            rc('font', family="AppleGothic")
-        else:
-            rc('font', family="NanumGothic")
-    except: pass
+    # 현재 파일이 있는 경로를 기준으로 폰트 파일 찾기
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    font_path = os.path.join(current_dir, "NanumGothic.ttf")
+    
+    # 폰트 파일 존재 여부 확인 (디버깅용)
+    if os.path.exists(font_path):
+        # 폰트 직접 등록
+        font_manager.fontManager.addfont(font_path)
+        rc('font', family=font_manager.FontProperties(fname=font_path).get_name())
+    else:
+        # 파일이 없으면 시스템 폰트 시도
+        try:
+            if platform.system() == "Windows":
+                rc('font', family="Malgun Gothic")
+            elif platform.system() == "Darwin":
+                rc('font', family="AppleGothic")
+            else:
+                rc('font', family="NanumGothic")
+        except:
+            pass
+            
     plt.rcParams['axes.unicode_minus'] = False
 
-set_font()
 st.set_page_config(page_title="CBMID Dashboard", layout="wide")
+set_font() # 폰트 설정 실행
 
 # ==========================================
 # 2. 다국어 사전
@@ -33,7 +45,6 @@ TEXT = {
         "title": "🌍 CBMID 글로벌 인재 지도",
         "subtitle": "AI 시대, 인류의 숨겨진 재능과 소명을 시각화하다",
         "sidebar_title": "🧬 CBMID 엔진",
-        "upload_label": "CSV 데이터 업로드 (KOR/ENG)",
         "warn_upload": "👈 왼쪽 사이드바에 CSV 파일을 업로드해주세요.",
         "tab1": "📊 전략 지도 (Strategic Matrix)",
         "tab2": "👤 개인 분석 (Individual Report)",
@@ -53,52 +64,16 @@ TEXT = {
         "h_superpower": "1. 당신의 핵심 무기 (Superpower)",
         "h_focus": "2. 현재 마음의 상태 (Current Focus)",
         "h_roadmap": "3. CBMID 성장 로드맵 (Growth Roadmap)",
-        "mi_names": {
-            "Linguistic": "언어 지능", "Logical": "논리-수학 지능", "Spatial": "시각-공간 지능",
-            "Bodily": "신체-운동 지능", "Musical": "음악 지능", "Interpersonal": "대인관계 지능",
-            "Intrapersonal": "자기성찰 지능", "Naturalist": "자연탐구 지능", "Existential": "실존 지능"
-        },
         "radar_labels": ["언어", "논리", "공간", "신체", "음악", "대인", "성찰", "자연", "실존"],
-        "int_desc": {
-            "Linguistic": "말과 글로 사람의 마음을 움직이는 힘이 탁월합니다.",
-            "Logical": "복잡한 현상 속에서 패턴을 찾아내는 전략적 두뇌를 가졌습니다.",
-            "Spatial": "보이지 않는 것을 시각화하는 능력이 뛰어납니다.",
-            "Bodily": "생각을 행동으로 구현해내는 감각이 탁월합니다.",
-            "Musical": "소리와 리듬, 감정의 흐름을 예민하게 포착합니다.",
-            "Interpersonal": "타인의 감정과 의도를 본능적으로 파악합니다.",
-            "Intrapersonal": "자신을 깊이 이해하고 성찰하는 힘이 있습니다.",
-            "Naturalist": "환경의 변화와 데이터의 패턴을 분류하는 관찰력이 뛰어납니다.",
-            "Existential": "삶의 본질과 인류의 미래를 고민하는 철학적 사고력을 가졌습니다."
-        },
-        "lvl_desc": {
-            1: "현재 에너지는 **'생존과 안정'**에 집중되어 있습니다.",
-            2: "당신은 **'책임감'**을 원동력으로 움직이고 있습니다.",
-            3: "당신은 **'협력과 공헌'**의 가치를 중요시합니다.",
-            4: "당신은 **'인류애와 포용'**의 단계에 있습니다.",
-            5: "당신은 **'소명과 초월'**의 에너지를 따릅니다."
-        },
-        "archetypes": {
-            "Storyteller": "스토리텔러", "Strategist": "전략가", "Architect": "설계자",
-            "Pioneer": "개척자", "Maestro": "마에스트로", "Mediator": "중재자",
-            "Philosopher": "철학자", "Guardian": "수호자", "Visionary": "선각자"
-        },
-        "adjectives": {
-            "Shadow": "그림자", "Survival": "생존형", "Responsible": "책임감 있는",
-            "Contributing": "공헌하는", "Humanitarian": "인류애 넘치는", "Divine": "천상의"
-        },
-        "p_title": "💊 CBMID AI 처방전",
-        "p_danger": "⚠️ 고위험 / 고잠재력 감지",
-        "p_ideal": "🌟 이상적인 리더 모델",
-        "p_grow": "💡 성장하는 인재",
-        "p_desc_danger": "능력은 탁월하지만, 생존 본능에 갇혀 있거나 윤리가 결여되어 있습니다.",
-        "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.",
-        "p_desc_grow": "성실하게 성장하고 있는 인재입니다."
+        "mi_names": {"Linguistic": "언어 지능", "Logical": "논리-수학 지능", "Spatial": "시각-공간 지능", "Bodily": "신체-운동 지능", "Musical": "음악 지능", "Interpersonal": "대인관계 지능", "Intrapersonal": "자기성찰 지능", "Naturalist": "자연탐구 지능", "Existential": "실존 지능"},
+        "int_desc": {"Linguistic": "말과 글로 사람의 마음을 움직이는 힘이 탁월합니다.", "Logical": "복잡한 현상 속에서 패턴을 찾아내는 전략적 두뇌를 가졌습니다.", "Spatial": "보이지 않는 것을 시각화하는 능력이 뛰어납니다.", "Bodily": "생각을 행동으로 구현해내는 감각이 탁월합니다.", "Musical": "소리와 리듬, 감정의 흐름을 예민하게 포착합니다.", "Interpersonal": "타인의 감정과 의도를 본능적으로 파악합니다.", "Intrapersonal": "자신을 깊이 이해하고 성찰하는 힘이 있습니다.", "Naturalist": "환경의 변화와 데이터의 패턴을 분류하는 관찰력이 뛰어납니다.", "Existential": "삶의 본질과 인류의 미래를 고민하는 철학적 사고력을 가졌습니다."},
+        "lvl_desc": {1: "현재 에너지는 **'생존과 안정'**에 집중되어 있습니다.", 2: "당신은 **'책임감'**을 원동력으로 움직이고 있습니다.", 3: "당신은 **'협력과 공헌'**의 가치를 중요시합니다.", 4: "당신은 **'인류애와 포용'**의 단계에 있습니다.", 5: "당신은 **'소명과 초월'**의 에너지를 따릅니다."},
+        "p_title": "💊 CBMID AI 처방전", "p_danger": "⚠️ 고위험 / 고잠재력 감지", "p_ideal": "🌟 이상적인 리더 모델", "p_grow": "💡 성장하는 인재", "p_desc_danger": "능력은 탁월하지만, 생존 본능에 갇혀 있거나 윤리가 결여되어 있습니다.", "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.", "p_desc_grow": "성실하게 성장하고 있는 인재입니다."
     },
     "English": {
         "title": "🌍 CBMID Global Talent Map",
         "subtitle": "Visualizing Hidden Talents & Calling in the AI Era",
         "sidebar_title": "🧬 CBMID Engine",
-        "upload_label": "Upload CSV Data (KOR/ENG)",
         "warn_upload": "👈 Please upload CSV files in the sidebar.",
         "tab1": "📊 Strategic Matrix",
         "tab2": "👤 Individual Report",
@@ -118,61 +93,29 @@ TEXT = {
         "h_superpower": "1. Your Superpower",
         "h_focus": "2. Your Current Focus",
         "h_roadmap": "3. CBMID Growth Roadmap",
-        "mi_names": {k: k for k in ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]},
         "radar_labels": ["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"],
-        "int_desc": {
-            "Linguistic": "You have the power to move hearts with words.",
-            "Logical": "You possess a strategic mind that finds patterns in chaos.",
-            "Spatial": "You can visualize the invisible blueprint of the future.",
-            "Bodily": "You turn thoughts into action with physical precision.",
-            "Musical": "You sense rhythms and emotions that others miss.",
-            "Interpersonal": "You instinctively understand others' emotions.",
-            "Intrapersonal": "You have profound self-awareness and inner strength.",
-            "Naturalist": "You have a keen eye for patterns in nature or data.",
-            "Existential": "You are a visionary who ponders fundamental questions."
-        },
-        "lvl_desc": {
-            1: "Your current focus is on **'Survival & Stability'**.",
-            2: "You are driven by **'Responsibility'**.",
-            3: "You value **'Contribution'** and cooperation.",
-            4: "You are guided by **'Humanity'** and harmony.",
-            5: "You are aligned with a **'Divine Calling'**."
-        },
-        "archetypes": {k: k for k in ["Storyteller", "Strategist", "Architect", "Pioneer", "Maestro", "Mediator", "Philosopher", "Guardian", "Visionary"]},
-        "adjectives": {k: k for k in ["Shadow", "Survival", "Responsible", "Contributing", "Humanitarian", "Divine"]},
-        "p_title": "💊 CBMID AI Prescription",
-        "p_danger": "⚠️ High Risk / High Potential Detected",
-        "p_ideal": "🌟 Ideal Leader Model",
-        "p_grow": "💡 Growing Talent",
-        "p_desc_danger": "Exceptional talent, but trapped in survival mode or lacking ethics.",
-        "p_desc_ideal": "A leader with perfect harmony of Competence and Conscience.",
-        "p_desc_grow": "A talent growing steadily with sincerity."
+        "mi_names": {k: k for k in ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]},
+        "int_desc": {"Linguistic": "You have the power to move hearts with words.", "Logical": "You possess a strategic mind.", "Spatial": "You can visualize the invisible.", "Bodily": "You turn thoughts into action.", "Musical": "You sense rhythms and emotions.", "Interpersonal": "You instinctively understand others.", "Intrapersonal": "You have profound self-awareness.", "Naturalist": "You have a keen eye for patterns.", "Existential": "You are a visionary."},
+        "lvl_desc": {1: "Focus: **'Survival & Stability'**.", 2: "Driven by **'Responsibility'**.", 3: "Value **'Contribution'**.", 4: "Guided by **'Humanity'**.", 5: "Aligned with **'Divine Calling'**."},
+        "p_title": "💊 CBMID AI Prescription", "p_danger": "⚠️ High Risk / High Potential Detected", "p_ideal": "🌟 Ideal Leader Model", "p_grow": "💡 Growing Talent", "p_desc_danger": "Exceptional talent, but trapped in survival mode.", "p_desc_ideal": "Harmony of Competence and Conscience.", "p_desc_grow": "Growing steadily with sincerity."
     }
 }
+
+# 아키타입용 데이터
+ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
+CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
+MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
 
 # ==========================================
 # 3. 로직 및 분석
 # ==========================================
-MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
-ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
-CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
-
 def load_data_safe(file):
-    """파일을 바이트로 읽어서 pandas로 변환 (BytesIO 방식)"""
     if file is None: return None
-    try:
-        # 파일 내용을 바이트로 읽음
-        bytes_data = file.getvalue()
-        
-        # 1차 시도: utf-8
-        try:
-            return pd.read_csv(BytesIO(bytes_data), encoding='utf-8')
-        except UnicodeDecodeError:
-            # 2차 시도: cp949 (한글 윈도우)
-            return pd.read_csv(BytesIO(bytes_data), encoding='cp949')
-    except Exception as e:
-        st.error(f"❌ 파일 읽기 실패: {e}")
-        return None
+    bytes_data = file.getvalue()
+    try: return pd.read_csv(BytesIO(bytes_data), encoding='utf-8')
+    except:
+        try: return pd.read_csv(BytesIO(bytes_data), encoding='cp949')
+        except: return None
 
 def analyze_data(df, lang):
     results = []
@@ -231,9 +174,9 @@ st.sidebar.title("🧬 CBMID Engine")
 language = st.sidebar.radio("Language / 언어", ["English", "KR"], index=0)
 t = TEXT[language]
 
-st.sidebar.info(f"System Ready (v2.9)")
+st.sidebar.info(f"System Ready (v3.1)")
 
-uploaded_files = st.sidebar.file_uploader(t['upload_label'], accept_multiple_files=True, type="csv", key="csv_uploader")
+uploaded_files = st.sidebar.file_uploader("Upload CSV Data (KOR/ENG)", accept_multiple_files=True, type="csv", key="csv_uploader")
 
 all_users = []
 if uploaded_files:
@@ -247,10 +190,15 @@ st.markdown(f"### {t['subtitle']}")
 
 if not all_users:
     st.info(t['warn_upload'])
+    # 폰트 로드 상태 확인 (디버깅용 - 배포 시 삭제해도 됨)
+    if os.path.exists("NanumGothic.ttf"):
+        st.caption("✅ Font Loaded: NanumGothic.ttf")
+    else:
+        st.caption("⚠️ Font Not Found: Using System Font")
 else:
     tab1, tab2 = st.tabs([t['tab1'], t['tab2']])
     
-    # --- [탭 1] 매트릭스 차트 ---
+    # --- [탭 1] 매트릭스 ---
     with tab1:
         st.subheader(f"{t['analysis_header']} {len(all_users)} {t['unit_person']}")
         plot_df = pd.DataFrame(all_users)
