@@ -3,33 +3,35 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import platform
+import os  # [수정] 이 부분이 빠져서 에러가 났었습니다!
 from io import BytesIO
 from matplotlib import font_manager, rc
 
 # ==========================================
-# [수정된 설정] 1. 폰트 설정 (서버용 파일 강제 적용)
+# 1. 폰트 설정 (서버/로컬 호환)
 # ==========================================
 def set_font():
-    # 1순위: 같은 폴더에 있는 NanumGothic.ttf 찾기 (서버용)
+    # 1순위: 서버용 폰트 파일 (NanumGothic.ttf)
     font_file = "NanumGothic.ttf"
     
     if os.path.exists(font_file):
-        # 폰트 파일이 있으면 그걸 등록해서 사용
+        # 폰트 파일이 있으면 로드해서 사용 (Streamlit Cloud용)
         font_name = font_manager.FontProperties(fname=font_file).get_name()
         rc('font', family=font_name)
     else:
-        # 2순위: 파일이 없으면(내 컴퓨터) 시스템 폰트 사용
+        # 2순위: 로컬 컴퓨터 시스템 폰트 사용
         try:
-            if platform.system() == "Windows":
+            system_name = platform.system()
+            if system_name == "Windows":
                 font_path = "c:/Windows/Fonts/malgun.ttf"
                 font_name = font_manager.FontProperties(fname=font_path).get_name()
                 rc('font', family=font_name)
-            elif platform.system() == "Darwin":
+            elif system_name == "Darwin": # Mac
                 rc('font', family="AppleGothic")
-            else:
+            else: # Linux (Colab etc)
                 rc('font', family="NanumGothic")
         except:
-            pass
+            pass # 폰트 설정 실패 시 기본 폰트 사용
             
     plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
 
@@ -44,6 +46,7 @@ TEXT = {
         "title": "🌍 CBMID 글로벌 인재 지도",
         "subtitle": "AI 시대, 인류의 숨겨진 재능과 소명을 시각화하다",
         "sidebar_title": "🧬 CBMID 엔진",
+        "upload_label": "CSV 데이터 업로드 (KOR/ENG)",
         "warn_upload": "👈 왼쪽 사이드바에 CSV 파일을 업로드해주세요.",
         "tab1": "📊 전략 지도 (Strategic Matrix)",
         "tab2": "👤 개인 분석 (Individual Report)",
@@ -58,17 +61,20 @@ TEXT = {
         "btn_download": "💾 차트 이미지 다운로드",
         "analysis_header": "참여자 분석 결과:",
         "unit_person": "명",
+        
         "rpt_top_int": "핵심 지능",
         "rpt_level": "의식 레벨",
         "h_superpower": "1. 당신의 핵심 무기 (Superpower)",
         "h_focus": "2. 현재 마음의 상태 (Current Focus)",
         "h_roadmap": "3. CBMID 성장 로드맵 (Growth Roadmap)",
+        
         "mi_names": {
             "Linguistic": "언어 지능", "Logical": "논리-수학 지능", "Spatial": "시각-공간 지능",
             "Bodily": "신체-운동 지능", "Musical": "음악 지능", "Interpersonal": "대인관계 지능",
             "Intrapersonal": "자기성찰 지능", "Naturalist": "자연탐구 지능", "Existential": "실존 지능"
         },
         "radar_labels": ["언어", "논리", "공간", "신체", "음악", "대인", "성찰", "자연", "실존"],
+        
         "int_desc": {
             "Linguistic": "말과 글로 사람의 마음을 움직이는 힘이 탁월합니다.",
             "Logical": "복잡한 현상 속에서 패턴을 찾아내는 전략적 두뇌를 가졌습니다.",
@@ -108,6 +114,7 @@ TEXT = {
         "title": "🌍 CBMID Global Talent Map",
         "subtitle": "Visualizing Hidden Talents & Calling in the AI Era",
         "sidebar_title": "🧬 CBMID Engine",
+        "upload_label": "Upload CSV Data (KOR/ENG)",
         "warn_upload": "👈 Please upload CSV files in the sidebar.",
         "tab1": "📊 Strategic Matrix",
         "tab2": "👤 Individual Report",
@@ -232,9 +239,9 @@ st.sidebar.title("🧬 CBMID Engine")
 language = st.sidebar.radio("Language / 언어", ["English", "KR"], index=0)
 t = TEXT[language]
 
-st.sidebar.info(f"System Ready (v2.8)")
+st.sidebar.info(f"System Ready (v3.1)")
 
-uploaded_files = st.sidebar.file_uploader("Upload CSV Data (KOR/ENG)", accept_multiple_files=True, type="csv")
+uploaded_files = st.sidebar.file_uploader(t['upload_label'], accept_multiple_files=True, type="csv")
 
 all_users = []
 if uploaded_files:
@@ -276,9 +283,8 @@ else:
         ax.set_title(t['matrix_title'], fontsize=20, weight='bold', pad=20)
         zone_font = {'fontsize': 16, 'weight': 'bold', 'bbox': dict(facecolor='white', alpha=0.8, edgecolor='gray', boxstyle='round,pad=0.5')}
         
-        # [수정] 라벨을 오른쪽 끝(29.8)으로 최대한 밀어냄
-        ax.text(29.8, 5.8, t['ideal'], color='green', ha='right', va='top', **zone_font)
-        ax.text(29.8, 0.2, t['danger'], color='red', ha='right', va='bottom', **zone_font)
+        ax.text(28.5, 5.8, t['ideal'], color='green', ha='right', va='top', **zone_font)
+        ax.text(28.5, 0.2, t['danger'], color='red', ha='right', va='bottom', **zone_font)
         ax.text(-3, 5.8, t['good'], color='blue', ha='left', va='top', **zone_font)
         ax.text(-3, 0.2, t['potential'], color='#E67E22', ha='left', va='bottom', **zone_font)
         
