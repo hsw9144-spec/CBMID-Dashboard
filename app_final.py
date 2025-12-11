@@ -107,9 +107,13 @@ def load_data_safe(file):
     파일을 바이트 스트림으로 읽어서 pandas로 변환 (커서 오류 및 인코딩 문제 해결)
     """
     if file is None: return None
+    
+    # [핵심] 파일 포인터를 무조건 처음으로 되돌림
+    file.seek(0)
+    
     try:
         # 파일 내용을 바이트로 읽음 (이 시점에서 스트림 소비)
-        bytes_data = file.getvalue()
+        bytes_data = file.read()
         
         # 1차 시도: utf-8
         try:
