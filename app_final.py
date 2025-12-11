@@ -2,40 +2,42 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import platform
-import os  # [수정] 이 부분이 빠져서 에러가 났었습니다!
 from io import BytesIO
 from matplotlib import font_manager, rc
 
 # ==========================================
-# 1. 폰트 설정 (서버/로컬 호환)
+# 1. 폰트 설정 (직접 로딩 방식)
 # ==========================================
-def set_font():
-    # 1순위: 서버용 폰트 파일 (NanumGothic.ttf)
+def get_font_prop():
+    """
+    시스템 폰트 등록 대신, 파일에서 직접 폰트 속성을 가져옵니다.
+    이 방법은 서버 환경에서 가장 확실하게 작동합니다.
+    """
     font_file = "NanumGothic.ttf"
     
+    # 1순위: GitHub/로컬 폴더에 있는 폰트 파일
     if os.path.exists(font_file):
-        # 폰트 파일이 있으면 로드해서 사용 (Streamlit Cloud용)
-        font_name = font_manager.FontProperties(fname=font_file).get_name()
-        rc('font', family=font_name)
-    else:
-        # 2순위: 로컬 컴퓨터 시스템 폰트 사용
-        try:
-            system_name = platform.system()
-            if system_name == "Windows":
-                font_path = "c:/Windows/Fonts/malgun.ttf"
-                font_name = font_manager.FontProperties(fname=font_path).get_name()
-                rc('font', family=font_name)
-            elif system_name == "Darwin": # Mac
-                rc('font', family="AppleGothic")
-            else: # Linux (Colab etc)
-                rc('font', family="NanumGothic")
-        except:
-            pass # 폰트 설정 실패 시 기본 폰트 사용
-            
-    plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
+        return font_manager.FontProperties(fname=font_file)
+    
+    # 2순위: 파일이 없으면 시스템 폰트 시도 (로컬 윈도우/맥용)
+    try:
+        system = platform.system()
+        if system == "Windows":
+            return font_manager.FontProperties(family="Malgun Gothic")
+        elif system == "Darwin":
+            return font_manager.FontProperties(family="AppleGothic")
+    except:
+        pass
+        
+    # 3순위: 다 안 되면 기본 폰트 (한글 깨질 수 있음)
+    return font_manager.FontProperties()
 
-set_font()
+# 전역 폰트 변수 설정
+FONT_PROP = get_font_prop()
+plt.rcParams['axes.unicode_minus'] = False
+
 st.set_page_config(page_title="CBMID Dashboard", layout="wide")
 
 # ==========================================
@@ -46,7 +48,6 @@ TEXT = {
         "title": "🌍 CBMID 글로벌 인재 지도",
         "subtitle": "AI 시대, 인류의 숨겨진 재능과 소명을 시각화하다",
         "sidebar_title": "🧬 CBMID 엔진",
-        "upload_label": "CSV 데이터 업로드 (KOR/ENG)",
         "warn_upload": "👈 왼쪽 사이드바에 CSV 파일을 업로드해주세요.",
         "tab1": "📊 전략 지도 (Strategic Matrix)",
         "tab2": "👤 개인 분석 (Individual Report)",
@@ -61,60 +62,21 @@ TEXT = {
         "btn_download": "💾 차트 이미지 다운로드",
         "analysis_header": "참여자 분석 결과:",
         "unit_person": "명",
-        
         "rpt_top_int": "핵심 지능",
         "rpt_level": "의식 레벨",
         "h_superpower": "1. 당신의 핵심 무기 (Superpower)",
         "h_focus": "2. 현재 마음의 상태 (Current Focus)",
         "h_roadmap": "3. CBMID 성장 로드맵 (Growth Roadmap)",
-        
-        "mi_names": {
-            "Linguistic": "언어 지능", "Logical": "논리-수학 지능", "Spatial": "시각-공간 지능",
-            "Bodily": "신체-운동 지능", "Musical": "음악 지능", "Interpersonal": "대인관계 지능",
-            "Intrapersonal": "자기성찰 지능", "Naturalist": "자연탐구 지능", "Existential": "실존 지능"
-        },
         "radar_labels": ["언어", "논리", "공간", "신체", "음악", "대인", "성찰", "자연", "실존"],
-        
-        "int_desc": {
-            "Linguistic": "말과 글로 사람의 마음을 움직이는 힘이 탁월합니다.",
-            "Logical": "복잡한 현상 속에서 패턴을 찾아내는 전략적 두뇌를 가졌습니다.",
-            "Spatial": "보이지 않는 것을 시각화하는 능력이 뛰어납니다.",
-            "Bodily": "생각을 행동으로 구현해내는 감각이 탁월합니다.",
-            "Musical": "소리와 리듬, 감정의 흐름을 예민하게 포착합니다.",
-            "Interpersonal": "타인의 감정과 의도를 본능적으로 파악합니다.",
-            "Intrapersonal": "자신을 깊이 이해하고 성찰하는 힘이 있습니다.",
-            "Naturalist": "환경의 변화와 데이터의 패턴을 분류하는 관찰력이 뛰어납니다.",
-            "Existential": "삶의 본질과 인류의 미래를 고민하는 철학적 사고력을 가졌습니다."
-        },
-        "lvl_desc": {
-            1: "현재 에너지는 **'생존과 안정'**에 집중되어 있습니다.",
-            2: "당신은 **'책임감'**을 원동력으로 움직이고 있습니다.",
-            3: "당신은 **'협력과 공헌'**의 가치를 중요시합니다.",
-            4: "당신은 **'인류애와 포용'**의 단계에 있습니다.",
-            5: "당신은 **'소명과 초월'**의 에너지를 따릅니다."
-        },
-        "archetypes": {
-            "Storyteller": "스토리텔러", "Strategist": "전략가", "Architect": "설계자",
-            "Pioneer": "개척자", "Maestro": "마에스트로", "Mediator": "중재자",
-            "Philosopher": "철학자", "Guardian": "수호자", "Visionary": "선각자"
-        },
-        "adjectives": {
-            "Shadow": "그림자", "Survival": "생존형", "Responsible": "책임감 있는",
-            "Contributing": "공헌하는", "Humanitarian": "인류애 넘치는", "Divine": "천상의"
-        },
-        "p_title": "💊 CBMID AI 처방전",
-        "p_danger": "⚠️ 고위험 / 고잠재력 감지",
-        "p_ideal": "🌟 이상적인 리더 모델",
-        "p_grow": "💡 성장하는 인재",
-        "p_desc_danger": "능력은 탁월하지만, 생존 본능에 갇혀 있거나 윤리가 결여되어 있습니다.",
-        "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.",
-        "p_desc_grow": "성실하게 성장하고 있는 인재입니다."
+        "mi_names": {"Linguistic": "언어 지능", "Logical": "논리-수학 지능", "Spatial": "시각-공간 지능", "Bodily": "신체-운동 지능", "Musical": "음악 지능", "Interpersonal": "대인관계 지능", "Intrapersonal": "자기성찰 지능", "Naturalist": "자연탐구 지능", "Existential": "실존 지능"},
+        "int_desc": {"Linguistic": "말과 글로 사람의 마음을 움직이는 힘이 탁월합니다.", "Logical": "복잡한 현상 속에서 패턴을 찾아내는 전략적 두뇌를 가졌습니다.", "Spatial": "보이지 않는 것을 시각화하는 능력이 뛰어납니다.", "Bodily": "생각을 행동으로 구현해내는 감각이 탁월합니다.", "Musical": "소리와 리듬, 감정의 흐름을 예민하게 포착합니다.", "Interpersonal": "타인의 감정과 의도를 본능적으로 파악합니다.", "Intrapersonal": "자신을 깊이 이해하고 성찰하는 힘이 있습니다.", "Naturalist": "환경의 변화와 데이터의 패턴을 분류하는 관찰력이 뛰어납니다.", "Existential": "삶의 본질과 인류의 미래를 고민하는 철학적 사고력을 가졌습니다."},
+        "lvl_desc": {1: "현재 에너지는 **'생존과 안정'**에 집중되어 있습니다.", 2: "당신은 **'책임감'**을 원동력으로 움직이고 있습니다.", 3: "당신은 **'협력과 공헌'**의 가치를 중요시합니다.", 4: "당신은 **'인류애와 포용'**의 단계에 있습니다.", 5: "당신은 **'소명과 초월'**의 에너지를 따릅니다."},
+        "p_title": "💊 CBMID AI 처방전", "p_danger": "⚠️ 고위험 / 고잠재력 감지", "p_ideal": "🌟 이상적인 리더 모델", "p_grow": "💡 성장하는 인재", "p_desc_danger": "능력은 탁월하지만, 생존 본능에 갇혀 있거나 윤리가 결여되어 있습니다.", "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.", "p_desc_grow": "성실하게 성장하고 있는 인재입니다."
     },
     "English": {
         "title": "🌍 CBMID Global Talent Map",
         "subtitle": "Visualizing Hidden Talents & Calling in the AI Era",
         "sidebar_title": "🧬 CBMID Engine",
-        "upload_label": "Upload CSV Data (KOR/ENG)",
         "warn_upload": "👈 Please upload CSV files in the sidebar.",
         "tab1": "📊 Strategic Matrix",
         "tab2": "👤 Individual Report",
@@ -134,45 +96,22 @@ TEXT = {
         "h_superpower": "1. Your Superpower",
         "h_focus": "2. Your Current Focus",
         "h_roadmap": "3. CBMID Growth Roadmap",
-        "mi_names": {k: k for k in ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]},
         "radar_labels": ["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"],
-        "int_desc": {
-            "Linguistic": "You have the power to move hearts with words.",
-            "Logical": "You possess a strategic mind that finds patterns in chaos.",
-            "Spatial": "You can visualize the invisible blueprint of the future.",
-            "Bodily": "You turn thoughts into action with physical precision.",
-            "Musical": "You sense rhythms and emotions that others miss.",
-            "Interpersonal": "You instinctively understand others' emotions.",
-            "Intrapersonal": "You have profound self-awareness and inner strength.",
-            "Naturalist": "You have a keen eye for patterns in nature or data.",
-            "Existential": "You are a visionary who ponders fundamental questions."
-        },
-        "lvl_desc": {
-            1: "Your current focus is on **'Survival & Stability'**.",
-            2: "You are driven by **'Responsibility'**.",
-            3: "You value **'Contribution'** and cooperation.",
-            4: "You are guided by **'Humanity'** and harmony.",
-            5: "You are aligned with a **'Divine Calling'**."
-        },
-        "archetypes": {k: k for k in ["Storyteller", "Strategist", "Architect", "Pioneer", "Maestro", "Mediator", "Philosopher", "Guardian", "Visionary"]},
-        "adjectives": {k: k for k in ["Shadow", "Survival", "Responsible", "Contributing", "Humanitarian", "Divine"]},
-        "p_title": "💊 CBMID AI Prescription",
-        "p_danger": "⚠️ High Risk / High Potential Detected",
-        "p_ideal": "🌟 Ideal Leader Model",
-        "p_grow": "💡 Growing Talent",
-        "p_desc_danger": "Exceptional talent, but trapped in survival mode or lacking ethics.",
-        "p_desc_ideal": "A leader with perfect harmony of Competence and Conscience.",
-        "p_desc_grow": "A talent growing steadily with sincerity."
+        "mi_names": {k: k for k in ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]},
+        "int_desc": {"Linguistic": "You have the power to move hearts with words.", "Logical": "You possess a strategic mind.", "Spatial": "You can visualize the invisible.", "Bodily": "You turn thoughts into action.", "Musical": "You sense rhythms and emotions.", "Interpersonal": "You instinctively understand others.", "Intrapersonal": "You have profound self-awareness.", "Naturalist": "You have a keen eye for patterns.", "Existential": "You are a visionary."},
+        "lvl_desc": {1: "Focus: **'Survival & Stability'**.", 2: "Driven by **'Responsibility'**.", 3: "Value **'Contribution'**.", 4: "Guided by **'Humanity'**.", 5: "Aligned with **'Divine Calling'**."},
+        "p_title": "💊 CBMID AI Prescription", "p_danger": "⚠️ High Risk / High Potential Detected", "p_ideal": "🌟 Ideal Leader Model", "p_grow": "💡 Growing Talent", "p_desc_danger": "Exceptional talent, but trapped in survival mode.", "p_desc_ideal": "Harmony of Competence and Conscience.", "p_desc_grow": "Growing steadily with sincerity."
     }
 }
+
+# 아키타입용 데이터 (변수 처리)
+ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
+CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
+MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
 
 # ==========================================
 # 3. 로직 및 분석
 # ==========================================
-MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
-ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
-CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
-
 def load_data_safe(file):
     if file is None: return None
     bytes_data = file.getvalue()
@@ -217,17 +156,12 @@ def analyze_data(df, lang):
         
         raw_adj = CONSCIENCE_ADJECTIVES_RAW.get(lvl, "Shadow")
         raw_noun = ARCHETYPE_NOUNS_RAW.get(top1[0], "Explorer")
-        
-        adj = t["adjectives"].get(raw_adj, raw_adj)
-        noun = t["archetypes"].get(raw_noun, raw_noun)
-        
-        archetype = f"{adj} {noun}"
+        archetype = f"{raw_adj} {raw_noun}"
         name = str(row[cols[name_idx]]).strip()
         
         results.append({
             "Name": name, "Archetype": archetype, "Level": lvl, 
-            "Scores": scores, "Top1_Score": top1[1], 
-            "Top1_Raw": top1[0]
+            "Scores": scores, "Top1_Score": top1[1], "Top1_Raw": top1[0]
         })
     return results
 
@@ -239,9 +173,10 @@ st.sidebar.title("🧬 CBMID Engine")
 language = st.sidebar.radio("Language / 언어", ["English", "KR"], index=0)
 t = TEXT[language]
 
-st.sidebar.info(f"System Ready (v3.1)")
+st.sidebar.info(f"System Ready (v3.0)")
 
-uploaded_files = st.sidebar.file_uploader(t['upload_label'], accept_multiple_files=True, type="csv")
+# [수정 1] 파일 초기화 방지: label 고정 + key 추가
+uploaded_files = st.sidebar.file_uploader("Upload CSV Data (KOR/ENG)", accept_multiple_files=True, type="csv", key="csv_uploader")
 
 all_users = []
 if uploaded_files:
@@ -258,6 +193,7 @@ if not all_users:
 else:
     tab1, tab2 = st.tabs([t['tab1'], t['tab2']])
     
+    # --- [탭 1] 매트릭스 차트 ---
     with tab1:
         st.subheader(f"{t['analysis_header']} {len(all_users)} {t['unit_person']}")
         plot_df = pd.DataFrame(all_users)
@@ -280,20 +216,26 @@ else:
             
         ax.scatter(plot_df['X_J'], plot_df['Y_J'], s=400, c=colors, alpha=0.85, edgecolors='black')
         
-        ax.set_title(t['matrix_title'], fontsize=20, weight='bold', pad=20)
+        # [수정 2] 폰트 적용 (fontproperties=FONT_PROP)
+        ax.set_title(t['matrix_title'], fontsize=20, weight='bold', pad=20, fontproperties=FONT_PROP)
+        
+        # [수정 3] Danger 라벨 오른쪽 끝으로 이동 (29.8)
         zone_font = {'fontsize': 16, 'weight': 'bold', 'bbox': dict(facecolor='white', alpha=0.8, edgecolor='gray', boxstyle='round,pad=0.5')}
         
-        ax.text(28.5, 5.8, t['ideal'], color='green', ha='right', va='top', **zone_font)
-        ax.text(28.5, 0.2, t['danger'], color='red', ha='right', va='bottom', **zone_font)
-        ax.text(-3, 5.8, t['good'], color='blue', ha='left', va='top', **zone_font)
-        ax.text(-3, 0.2, t['potential'], color='#E67E22', ha='left', va='bottom', **zone_font)
+        ax.text(29.8, 5.8, t['ideal'], color='green', ha='right', va='top', fontproperties=FONT_PROP, **zone_font)
+        ax.text(29.8, 0.2, t['danger'], color='red', ha='right', va='bottom', fontproperties=FONT_PROP, **zone_font)
+        ax.text(-3, 5.8, t['good'], color='blue', ha='left', va='top', fontproperties=FONT_PROP, **zone_font)
+        ax.text(-3, 0.2, t['potential'], color='#E67E22', ha='left', va='bottom', fontproperties=FONT_PROP, **zone_font)
         
         ax.axhline(y=3, color='gray', alpha=0.3); ax.axvline(x=15, color='gray', alpha=0.3)
-        ax.set_xlabel(t['x_label'], fontsize=14); ax.set_ylabel(t['y_label'], fontsize=14)
+        ax.set_xlabel(t['x_label'], fontsize=14, fontproperties=FONT_PROP)
+        ax.set_ylabel(t['y_label'], fontsize=14, fontproperties=FONT_PROP)
+        
         ax.set_ylim(0, 6); ax.set_xlim(-4, 30)
         ax.set_xticks([0, 5, 10, 15, 20, 25]); ax.set_xticklabels(['0', '5', '10', '15', '20', '25 (Max)'])
         ax.set_yticks([1, 2, 3, 4, 5]); ax.set_yticklabels(['Lvl 1', 'Lvl 2', 'Lvl 3', 'Lvl 4', 'Lvl 5'])
 
+        # 이름 배치
         plot_df = plot_df.sort_values(by='X_J')
         for i, row in enumerate(plot_df.itertuples()):
             name = str(row.Name)
@@ -301,14 +243,15 @@ else:
             txt_color, weight, prefix = 'black', 'normal', ""
             off_x, off_y, ha = 0, 0.35 if i%2==0 else -0.45, 'center'
             
-            if 'Lise' in name or 'Jun' in name: off_y, ha = 0.5, 'center'
+            # [수정 4] Nami 이름 위치 (점 아래로 이동)
+            if 'Nami' in name: off_x, off_y, ha = 0, -0.5, 'center'
+            elif 'Lise' in name or 'Jun' in name: off_y, ha = 0.5, 'center'
             elif 'Ann' in name: txt_color, weight = '#E67E22', 'bold'; off_x, off_y, ha = 0.6, 0.4, 'left'
             elif 'Mathfinder' in name: txt_color, weight = 'black', 'bold'; off_x, off_y, ha = 0.8, -0.2, 'left'
             elif 'ped0' in name.lower(): txt_color, weight, prefix = 'red', 'bold', "[!] "; off_x, off_y, ha = -0.8, 0, 'right'
             elif 'HSW' in name: txt_color, weight = '#8E44AD', 'bold'; off_y = 0.45
-            elif 'Nami' in name: off_x, off_y, ha = 0, -0.5, 'center' 
                 
-            ax.text(x+off_x, y+off_y, prefix+name, color=txt_color, weight=weight, ha=ha, fontsize=11,
+            ax.text(x+off_x, y+off_y, prefix+name, color=txt_color, weight=weight, ha=ha, fontsize=11, fontproperties=FONT_PROP,
                     bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', pad=1.5))
         
         st.pyplot(fig)
@@ -318,6 +261,7 @@ else:
         fig.savefig(img, format='png', dpi=150, bbox_inches='tight')
         st.download_button(label=t['btn_download'], data=img, file_name=fn, mime="image/png")
 
+    # --- [탭 2] 개인별 분석 ---
     with tab2:
         user_list = [u['Name'] for u in all_users]
         selected = st.selectbox(t['select_user'], user_list)
@@ -334,10 +278,9 @@ else:
             ax_r.fill(ang, val, color=lc, alpha=0.2)
             ax_r.set_ylim(0, 25); ax_r.set_xticks(ang[:-1])
             
-            if language == "KR": ax_r.set_xticklabels(["언어", "논리", "공간", "신체", "음악", "대인", "성찰", "자연", "실존"], size=9, weight='bold')
-            else: ax_r.set_xticklabels(["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"], size=9, weight='bold')
-            
-            ax_r.set_title(target['Archetype'], y=1.1, size=15, weight='bold')
+            # 레이더 라벨 폰트 적용
+            ax_r.set_xticklabels(t['radar_labels'], size=9, weight='bold', fontproperties=FONT_PROP)
+            ax_r.set_title(target['Archetype'], y=1.1, size=15, weight='bold', fontproperties=FONT_PROP)
             st.pyplot(fig_r)
             
         with col2:
