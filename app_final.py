@@ -7,20 +7,31 @@ from io import BytesIO
 from matplotlib import font_manager, rc
 
 # ==========================================
-# 1. 폰트 설정
+# [수정된 설정] 1. 폰트 설정 (서버용 파일 강제 적용)
 # ==========================================
 def set_font():
-    try:
-        if platform.system() == "Windows":
-            font_path = "c:/Windows/Fonts/malgun.ttf"
-            font_name = font_manager.FontProperties(fname=font_path).get_name()
-            rc('font', family=font_name)
-        elif platform.system() == "Darwin":
-            rc('font', family="AppleGothic")
-        else:
-            rc('font', family="NanumGothic")
-    except: pass
-    plt.rcParams['axes.unicode_minus'] = False
+    # 1순위: 같은 폴더에 있는 NanumGothic.ttf 찾기 (서버용)
+    font_file = "NanumGothic.ttf"
+    
+    if os.path.exists(font_file):
+        # 폰트 파일이 있으면 그걸 등록해서 사용
+        font_name = font_manager.FontProperties(fname=font_file).get_name()
+        rc('font', family=font_name)
+    else:
+        # 2순위: 파일이 없으면(내 컴퓨터) 시스템 폰트 사용
+        try:
+            if platform.system() == "Windows":
+                font_path = "c:/Windows/Fonts/malgun.ttf"
+                font_name = font_manager.FontProperties(fname=font_path).get_name()
+                rc('font', family=font_name)
+            elif platform.system() == "Darwin":
+                rc('font', family="AppleGothic")
+            else:
+                rc('font', family="NanumGothic")
+        except:
+            pass
+            
+    plt.rcParams['axes.unicode_minus'] = False # 마이너스 기호 깨짐 방지
 
 set_font()
 st.set_page_config(page_title="CBMID Dashboard", layout="wide")
