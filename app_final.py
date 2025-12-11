@@ -8,20 +8,16 @@ from io import BytesIO
 from matplotlib import font_manager, rc
 
 # ==========================================
-# 1. 폰트 설정 (강제 로딩 방식)
+# 1. 폰트 설정
 # ==========================================
 def set_font():
-    # 현재 파일이 있는 경로를 기준으로 폰트 파일 찾기
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    font_path = os.path.join(current_dir, "NanumGothic.ttf")
+    font_file = os.path.join(current_dir, "NanumGothic.ttf")
     
-    # 폰트 파일 존재 여부 확인 (디버깅용)
-    if os.path.exists(font_path):
-        # 폰트 직접 등록
-        font_manager.fontManager.addfont(font_path)
-        rc('font', family=font_manager.FontProperties(fname=font_path).get_name())
+    if os.path.exists(font_file):
+        font_manager.fontManager.addfont(font_file)
+        rc('font', family=font_manager.FontProperties(fname=font_file).get_name())
     else:
-        # 파일이 없으면 시스템 폰트 시도
         try:
             if platform.system() == "Windows":
                 rc('font', family="Malgun Gothic")
@@ -29,13 +25,11 @@ def set_font():
                 rc('font', family="AppleGothic")
             else:
                 rc('font', family="NanumGothic")
-        except:
-            pass
-            
+        except: pass
     plt.rcParams['axes.unicode_minus'] = False
 
 st.set_page_config(page_title="CBMID Dashboard", layout="wide")
-set_font() # 폰트 설정 실행
+set_font()
 
 # ==========================================
 # 2. 다국어 사전
@@ -101,21 +95,31 @@ TEXT = {
     }
 }
 
-# 아키타입용 데이터
 ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
 CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
 MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
 
 # ==========================================
-# 3. 로직 및 분석
+# 3. 로직 및 분석 (안전한 파일 로더 적용)
 # ==========================================
 def load_data_safe(file):
+    """
+    파일을 바이트 스트림으로 읽어서 pandas로 변환 (커서 오류 및 인코딩 문제 해결)
+    """
     if file is None: return None
-    bytes_data = file.getvalue()
-    try: return pd.read_csv(BytesIO(bytes_data), encoding='utf-8')
-    except:
-        try: return pd.read_csv(BytesIO(bytes_data), encoding='cp949')
-        except: return None
+    try:
+        # 파일 내용을 바이트로 읽음 (이 시점에서 스트림 소비)
+        bytes_data = file.getvalue()
+        
+        # 1차 시도: utf-8
+        try:
+            return pd.read_csv(BytesIO(bytes_data), encoding='utf-8')
+        except UnicodeDecodeError:
+            # 2차 시도: cp949 (한글 윈도우)
+            return pd.read_csv(BytesIO(bytes_data), encoding='cp949')
+    except Exception as e:
+        st.error(f"❌ 파일 읽기 실패: {e}")
+        return None
 
 def analyze_data(df, lang):
     results = []
@@ -174,14 +178,14 @@ st.sidebar.title("🧬 CBMID Engine")
 language = st.sidebar.radio("Language / 언어", ["English", "KR"], index=0)
 t = TEXT[language]
 
-st.sidebar.info(f"System Ready (v3.1)")
+st.sidebar.info(f"System Ready (v3.2)")
 
-uploaded_files = st.sidebar.file_uploader("Upload CSV Data (KOR/ENG)", accept_multiple_files=True, type="csv", key="csv_uploader")
+uploaded_files = st.sidebar.file_uploader(t['upload_label'], accept_multiple_files=True, type="csv", key="csv_uploader")
 
 all_users = []
 if uploaded_files:
     for file in uploaded_files:
-        df = load_data_safe(file)
+        df = load_data_safe(file) # 안전한 로더 사용
         if df is not None:
             all_users.extend(analyze_data(df, language))
 
@@ -190,15 +194,9 @@ st.markdown(f"### {t['subtitle']}")
 
 if not all_users:
     st.info(t['warn_upload'])
-    # 폰트 로드 상태 확인 (디버깅용 - 배포 시 삭제해도 됨)
-    if os.path.exists("NanumGothic.ttf"):
-        st.caption("✅ Font Loaded: NanumGothic.ttf")
-    else:
-        st.caption("⚠️ Font Not Found: Using System Font")
 else:
     tab1, tab2 = st.tabs([t['tab1'], t['tab2']])
     
-    # --- [탭 1] 매트릭스 ---
     with tab1:
         st.subheader(f"{t['analysis_header']} {len(all_users)} {t['unit_person']}")
         plot_df = pd.DataFrame(all_users)
