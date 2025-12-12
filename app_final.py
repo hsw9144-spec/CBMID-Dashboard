@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import platform
+import tempfile
 from io import BytesIO
 from matplotlib import font_manager, rc
 
@@ -32,13 +33,14 @@ st.set_page_config(page_title="CBMID Dashboard", layout="wide")
 set_font()
 
 # ==========================================
-# 2. 다국어 사전
+# 2. 다국어 사전 (모든 키 명시적 정의 - 에러 방지)
 # ==========================================
 TEXT = {
     "KR": {
         "title": "🌍 CBMID 글로벌 인재 지도",
         "subtitle": "AI 시대, 인류의 숨겨진 재능과 소명을 시각화하다",
         "sidebar_title": "🧬 CBMID 엔진",
+        "upload_label": "CSV 데이터 업로드 (KOR/ENG)",
         "warn_upload": "👈 왼쪽 사이드바에 CSV 파일을 업로드해주세요.",
         "tab1": "📊 전략 지도 (Strategic Matrix)",
         "tab2": "👤 개인 분석 (Individual Report)",
@@ -62,12 +64,15 @@ TEXT = {
         "mi_names": {"Linguistic": "언어 지능", "Logical": "논리-수학 지능", "Spatial": "시각-공간 지능", "Bodily": "신체-운동 지능", "Musical": "음악 지능", "Interpersonal": "대인관계 지능", "Intrapersonal": "자기성찰 지능", "Naturalist": "자연탐구 지능", "Existential": "실존 지능"},
         "int_desc": {"Linguistic": "말과 글로 사람의 마음을 움직이는 힘이 탁월합니다.", "Logical": "복잡한 현상 속에서 패턴을 찾아내는 전략적 두뇌를 가졌습니다.", "Spatial": "보이지 않는 것을 시각화하는 능력이 뛰어납니다.", "Bodily": "생각을 행동으로 구현해내는 감각이 탁월합니다.", "Musical": "소리와 리듬, 감정의 흐름을 예민하게 포착합니다.", "Interpersonal": "타인의 감정과 의도를 본능적으로 파악합니다.", "Intrapersonal": "자신을 깊이 이해하고 성찰하는 힘이 있습니다.", "Naturalist": "환경의 변화와 데이터의 패턴을 분류하는 관찰력이 뛰어납니다.", "Existential": "삶의 본질과 인류의 미래를 고민하는 철학적 사고력을 가졌습니다."},
         "lvl_desc": {1: "현재 에너지는 **'생존과 안정'**에 집중되어 있습니다.", 2: "당신은 **'책임감'**을 원동력으로 움직이고 있습니다.", 3: "당신은 **'협력과 공헌'**의 가치를 중요시합니다.", 4: "당신은 **'인류애와 포용'**의 단계에 있습니다.", 5: "당신은 **'소명과 초월'**의 에너지를 따릅니다."},
-        "p_title": "💊 CBMID AI 처방전", "p_danger": "⚠️ 고위험 / 고잠재력 감지", "p_ideal": "🌟 이상적인 리더 모델", "p_grow": "💡 성장하는 인재", "p_desc_danger": "능력은 탁월하지만, 생존 본능에 갇혀 있거나 윤리가 결여되어 있습니다.", "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.", "p_desc_grow": "성실하게 성장하고 있는 인재입니다."
+        "p_title": "💊 CBMID AI 처방전", "p_danger": "⚠️ 고위험 / 고잠재력 감지", "p_ideal": "🌟 이상적인 리더 모델", "p_grow": "💡 성장하는 인재", "p_desc_danger": "능력은 탁월하지만, 생존 본능에 갇혀 있거나 윤리가 결여되어 있습니다.", "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.", "p_desc_grow": "성실하게 성장하고 있는 인재입니다.",
+        "archetypes": {"Storyteller": "스토리텔러", "Strategist": "전략가", "Architect": "설계자", "Pioneer": "개척자", "Maestro": "마에스트로", "Mediator": "중재자", "Philosopher": "철학자", "Guardian": "수호자", "Visionary": "선각자", "Explorer": "탐구자"},
+        "adjectives": {"Shadow": "그림자", "Survival": "생존형", "Responsible": "책임감 있는", "Contributing": "공헌하는", "Humanitarian": "인류애 넘치는", "Divine": "천상의"}
     },
     "English": {
         "title": "🌍 CBMID Global Talent Map",
         "subtitle": "Visualizing Hidden Talents & Calling in the AI Era",
         "sidebar_title": "🧬 CBMID Engine",
+        "upload_label": "Upload CSV Data (KOR/ENG)",
         "warn_upload": "👈 Please upload CSV files in the sidebar.",
         "tab1": "📊 Strategic Matrix",
         "tab2": "👤 Individual Report",
@@ -88,10 +93,13 @@ TEXT = {
         "h_focus": "2. Your Current Focus",
         "h_roadmap": "3. CBMID Growth Roadmap",
         "radar_labels": ["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"],
-        "mi_names": {k: k for k in ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]},
+        "mi_names": {"Linguistic": "Linguistic", "Logical": "Logical", "Spatial": "Spatial", "Bodily": "Bodily", "Musical": "Musical", "Interpersonal": "Interpersonal", "Intrapersonal": "Intrapersonal", "Naturalist": "Naturalist", "Existential": "Existential"},
         "int_desc": {"Linguistic": "You have the power to move hearts with words.", "Logical": "You possess a strategic mind.", "Spatial": "You can visualize the invisible.", "Bodily": "You turn thoughts into action.", "Musical": "You sense rhythms and emotions.", "Interpersonal": "You instinctively understand others.", "Intrapersonal": "You have profound self-awareness.", "Naturalist": "You have a keen eye for patterns.", "Existential": "You are a visionary."},
         "lvl_desc": {1: "Focus: **'Survival & Stability'**.", 2: "Driven by **'Responsibility'**.", 3: "Value **'Contribution'**.", 4: "Guided by **'Humanity'**.", 5: "Aligned with **'Divine Calling'**."},
-        "p_title": "💊 CBMID AI Prescription", "p_danger": "⚠️ High Risk / High Potential Detected", "p_ideal": "🌟 Ideal Leader Model", "p_grow": "💡 Growing Talent", "p_desc_danger": "Exceptional talent, but trapped in survival mode.", "p_desc_ideal": "Harmony of Competence and Conscience.", "p_desc_grow": "Growing steadily with sincerity."
+        "p_title": "💊 CBMID AI Prescription", "p_danger": "⚠️ High Risk / High Potential Detected", "p_ideal": "🌟 Ideal Leader Model", "p_grow": "💡 Growing Talent", "p_desc_danger": "Exceptional talent, but trapped in survival mode.", "p_desc_ideal": "Harmony of Competence and Conscience.", "p_desc_grow": "Growing steadily with sincerity.",
+        # [핵심 수정] 영어 딕셔너리에도 명시적으로 추가
+        "archetypes": {"Storyteller": "Storyteller", "Strategist": "Strategist", "Architect": "Architect", "Pioneer": "Pioneer", "Maestro": "Maestro", "Mediator": "Mediator", "Philosopher": "Philosopher", "Guardian": "Guardian", "Visionary": "Visionary", "Explorer": "Explorer"},
+        "adjectives": {"Shadow": "Shadow", "Survival": "Survival", "Responsible": "Responsible", "Contributing": "Contributing", "Humanitarian": "Humanitarian", "Divine": "Divine"}
     }
 }
 
@@ -100,29 +108,20 @@ CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing",
 MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
 
 # ==========================================
-# 3. 로직 및 분석 (안전한 파일 로더 적용)
+# 3. 로직 및 분석
 # ==========================================
 def load_data_safe(file):
-    """
-    파일을 바이트 스트림으로 읽어서 pandas로 변환 (커서 오류 및 인코딩 문제 해결)
-    """
     if file is None: return None
-    
-    # [핵심] 파일 포인터를 무조건 처음으로 되돌림
-    file.seek(0)
-    
     try:
-        # 파일 내용을 바이트로 읽음 (이 시점에서 스트림 소비)
-        bytes_data = file.read()
-        
-        # 1차 시도: utf-8
-        try:
-            return pd.read_csv(BytesIO(bytes_data), encoding='utf-8')
-        except UnicodeDecodeError:
-            # 2차 시도: cp949 (한글 윈도우)
-            return pd.read_csv(BytesIO(bytes_data), encoding='cp949')
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_file.write(file.getvalue())
+            tmp_file_path = tmp_file.name
+        try: df = pd.read_csv(tmp_file_path, encoding='utf-8')
+        except: df = pd.read_csv(tmp_file_path, encoding='cp949')
+        os.remove(tmp_file_path)
+        return df
     except Exception as e:
-        st.error(f"❌ 파일 읽기 실패: {e}")
+        st.error(f"❌ 파일 처리 실패: {e}")
         return None
 
 def analyze_data(df, lang):
@@ -135,7 +134,7 @@ def analyze_data(df, lang):
     potential_cols = cols[name_idx+1 : crisis_idx]
     mi_cols = [c for c in potential_cols if c.strip()[0].isdigit()]
     
-    t = TEXT[lang]
+    t = TEXT[lang] # 현재 선택된 언어팩
 
     for idx, row in df.iterrows():
         scores = {}
@@ -162,6 +161,7 @@ def analyze_data(df, lang):
         raw_adj = CONSCIENCE_ADJECTIVES_RAW.get(lvl, "Shadow")
         raw_noun = ARCHETYPE_NOUNS_RAW.get(top1[0], "Explorer")
         
+        # [수정] 이제 t["adjectives"]와 t["archetypes"]가 KR/English 모두에 존재하므로 에러 안 남
         adj = t["adjectives"].get(raw_adj, raw_adj)
         noun = t["archetypes"].get(raw_noun, raw_noun)
         
@@ -182,14 +182,14 @@ st.sidebar.title("🧬 CBMID Engine")
 language = st.sidebar.radio("Language / 언어", ["English", "KR"], index=0)
 t = TEXT[language]
 
-st.sidebar.info(f"System Ready (v3.2)")
+st.sidebar.info(f"System Ready (v4.0)")
 
 uploaded_files = st.sidebar.file_uploader(t['upload_label'], accept_multiple_files=True, type="csv", key="csv_uploader")
 
 all_users = []
 if uploaded_files:
     for file in uploaded_files:
-        df = load_data_safe(file) # 안전한 로더 사용
+        df = load_data_safe(file)
         if df is not None:
             all_users.extend(analyze_data(df, language))
 
@@ -259,7 +259,7 @@ else:
         fn = "CBMID_Chart_EN.png" if language == "English" else "CBMID_Chart_KR.png"
         img = BytesIO()
         fig.savefig(img, format='png', dpi=150, bbox_inches='tight')
-        st.download_button(label=t['btn_download'], data=img, file_name=fn, mime="image/png")
+        st.download_button(label=t['btn_download'], data=img.getvalue(), file_name=fn, mime="image/png")
 
     with tab2:
         user_list = [u['Name'] for u in all_users]
@@ -277,9 +277,8 @@ else:
             ax_r.fill(ang, val, color=lc, alpha=0.2)
             ax_r.set_ylim(0, 25); ax_r.set_xticks(ang[:-1])
             
-            if language == "KR": ax_r.set_xticklabels(["언어", "논리", "공간", "신체", "음악", "대인", "성찰", "자연", "실존"], size=9, weight='bold')
-            else: ax_r.set_xticklabels(["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"], size=9, weight='bold')
-            
+            # 레이더 라벨
+            ax_r.set_xticklabels(t['radar_labels'], size=9, weight='bold')
             ax_r.set_title(target['Archetype'], y=1.1, size=15, weight='bold')
             st.pyplot(fig_r)
             
