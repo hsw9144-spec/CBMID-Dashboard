@@ -33,7 +33,7 @@ st.set_page_config(page_title="CBMID Dashboard", layout="wide")
 set_font()
 
 # ==========================================
-# 2. 다국어 사전 (모든 키 명시적 정의 - 에러 방지)
+# 2. 다국어 사전
 # ==========================================
 TEXT = {
     "KR": {
@@ -46,7 +46,7 @@ TEXT = {
         "tab2": "👤 개인 분석 (Individual Report)",
         "matrix_title": "CBMID 전략 매트릭스: 능력 vs 의식",
         "ideal": "이상적인 리더\n(Target Zone)",
-        "danger": "위험 구간\n(High Risk)",
+        "danger": "불균형 고잠재력\n(Unbalanced)", 
         "good": "선량한 시민",
         "potential": "잠재적 인재\n(Need Support)",
         "x_label": "능력 (Competence - Max Talent)",
@@ -63,10 +63,16 @@ TEXT = {
         "radar_labels": ["언어", "논리", "공간", "신체", "음악", "대인", "성찰", "자연", "실존"],
         "mi_names": {"Linguistic": "언어 지능", "Logical": "논리-수학 지능", "Spatial": "시각-공간 지능", "Bodily": "신체-운동 지능", "Musical": "음악 지능", "Interpersonal": "대인관계 지능", "Intrapersonal": "자기성찰 지능", "Naturalist": "자연탐구 지능", "Existential": "실존 지능"},
         "int_desc": {"Linguistic": "말과 글로 사람의 마음을 움직이는 힘이 탁월합니다.", "Logical": "복잡한 현상 속에서 패턴을 찾아내는 전략적 두뇌를 가졌습니다.", "Spatial": "보이지 않는 것을 시각화하는 능력이 뛰어납니다.", "Bodily": "생각을 행동으로 구현해내는 감각이 탁월합니다.", "Musical": "소리와 리듬, 감정의 흐름을 예민하게 포착합니다.", "Interpersonal": "타인의 감정과 의도를 본능적으로 파악합니다.", "Intrapersonal": "자신을 깊이 이해하고 성찰하는 힘이 있습니다.", "Naturalist": "환경의 변화와 데이터의 패턴을 분류하는 관찰력이 뛰어납니다.", "Existential": "삶의 본질과 인류의 미래를 고민하는 철학적 사고력을 가졌습니다."},
-        "lvl_desc": {1: "현재 에너지는 **'생존과 안정'**에 집중되어 있습니다.", 2: "당신은 **'책임감'**을 원동력으로 움직이고 있습니다.", 3: "당신은 **'협력과 공헌'**의 가치를 중요시합니다.", 4: "당신은 **'인류애와 포용'**의 단계에 있습니다.", 5: "당신은 **'소명과 초월'**의 에너지를 따릅니다."},
-        "p_title": "💊 CBMID AI 처방전", "p_danger": "⚠️ 고위험 / 고잠재력 감지", "p_ideal": "🌟 이상적인 리더 모델", "p_grow": "💡 성장하는 인재", "p_desc_danger": "능력은 탁월하지만, 생존 본능에 갇혀 있거나 윤리가 결여되어 있습니다.", "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.", "p_desc_grow": "성실하게 성장하고 있는 인재입니다.",
+        "lvl_desc": {1: "현재 에너지는 **'생존과 안정'**에 집중되어 있습니다.", 2: "당신은 **'책임감'**을 원동력으로 움직이고 있습니다.", 3: "당신은 **'협력과 공헌'**의 가치를 중요시합니다.", 4: "당신은 **'인류애와 포용'**의 단계에 있습니다.", 5: "당신은 **'소명(Calling)'**의 에너지를 따릅니다."},
+        "p_title": "💊 CBMID AI 처방전",
+        "p_danger": "⚠️ 불균형 고잠재력 (Unbalanced High Potential)",
+        "p_ideal": "🌟 이상적인 리더 모델",
+        "p_grow": "💡 성장하는 인재",
+        "p_desc_danger": "능력은 매우 탁월하나, 현재 생존/에고 중심의 에너지가 강해 윤리적 그라운딩이 필요합니다.",
+        "p_desc_ideal": "능력과 양심이 조화를 이룬 이상적인 리더입니다.",
+        "p_desc_grow": "성실하게 성장하고 있는 인재입니다.",
         "archetypes": {"Storyteller": "스토리텔러", "Strategist": "전략가", "Architect": "설계자", "Pioneer": "개척자", "Maestro": "마에스트로", "Mediator": "중재자", "Philosopher": "철학자", "Guardian": "수호자", "Visionary": "선각자", "Explorer": "탐구자"},
-        "adjectives": {"Shadow": "그림자", "Survival": "생존형", "Responsible": "책임감 있는", "Contributing": "공헌하는", "Humanitarian": "인류애 넘치는", "Divine": "천상의"}
+        "adjectives": {"Shadow": "그림자", "Survival": "생존형", "Responsible": "책임감 있는", "Contributing": "공헌하는", "Humanitarian": "인류애적", "Calling": "소명적"}
     },
     "English": {
         "title": "🌍 CBMID Global Talent Map",
@@ -78,7 +84,7 @@ TEXT = {
         "tab2": "👤 Individual Report",
         "matrix_title": "CBMID Strategic Map: Competence vs Conscience",
         "ideal": "Ideal Leaders\n(Target Zone)",
-        "danger": "DANGER ZONE\n(High Risk)",
+        "danger": "Unbalanced High Potential\n(Needs Grounding)", 
         "good": "Good Citizens",
         "potential": "Potential Talent\n(Need Support)",
         "x_label": "Competence (Max Talent Score)",
@@ -95,16 +101,21 @@ TEXT = {
         "radar_labels": ["Ling", "Logic", "Spat", "Body", "Music", "Inter", "Intra", "Natur", "Exist"],
         "mi_names": {"Linguistic": "Linguistic", "Logical": "Logical", "Spatial": "Spatial", "Bodily": "Bodily", "Musical": "Musical", "Interpersonal": "Interpersonal", "Intrapersonal": "Intrapersonal", "Naturalist": "Naturalist", "Existential": "Existential"},
         "int_desc": {"Linguistic": "You have the power to move hearts with words.", "Logical": "You possess a strategic mind.", "Spatial": "You can visualize the invisible.", "Bodily": "You turn thoughts into action.", "Musical": "You sense rhythms and emotions.", "Interpersonal": "You instinctively understand others.", "Intrapersonal": "You have profound self-awareness.", "Naturalist": "You have a keen eye for patterns.", "Existential": "You are a visionary."},
-        "lvl_desc": {1: "Focus: **'Survival & Stability'**.", 2: "Driven by **'Responsibility'**.", 3: "Value **'Contribution'**.", 4: "Guided by **'Humanity'**.", 5: "Aligned with **'Divine Calling'**."},
-        "p_title": "💊 CBMID AI Prescription", "p_danger": "⚠️ High Risk / High Potential Detected", "p_ideal": "🌟 Ideal Leader Model", "p_grow": "💡 Growing Talent", "p_desc_danger": "Exceptional talent, but trapped in survival mode.", "p_desc_ideal": "Harmony of Competence and Conscience.", "p_desc_grow": "Growing steadily with sincerity.",
-        # [핵심 수정] 영어 딕셔너리에도 명시적으로 추가
+        "lvl_desc": {1: "Focus: **'Survival & Stability'**.", 2: "Driven by **'Responsibility'**.", 3: "Value **'Contribution'**.", 4: "Guided by **'Humanity'**.", 5: "Aligned with **'Calling'**."},
+        "p_title": "💊 CBMID AI Prescription",
+        "p_danger": "⚠️ Unbalanced High Potential Detected",
+        "p_ideal": "🌟 Ideal Leader Model",
+        "p_grow": "💡 Growing Talent",
+        "p_desc_danger": "High competence but currently focused on survival or ego. Needs ethical grounding.",
+        "p_desc_ideal": "Harmony of Competence and Conscience.",
+        "p_desc_grow": "Growing steadily with sincerity.",
         "archetypes": {"Storyteller": "Storyteller", "Strategist": "Strategist", "Architect": "Architect", "Pioneer": "Pioneer", "Maestro": "Maestro", "Mediator": "Mediator", "Philosopher": "Philosopher", "Guardian": "Guardian", "Visionary": "Visionary", "Explorer": "Explorer"},
-        "adjectives": {"Shadow": "Shadow", "Survival": "Survival", "Responsible": "Responsible", "Contributing": "Contributing", "Humanitarian": "Humanitarian", "Divine": "Divine"}
+        "adjectives": {"Shadow": "Shadow", "Survival": "Survival", "Responsible": "Responsible", "Contributing": "Contributing", "Humanitarian": "Humanitarian", "Calling": "Calling"}
     }
 }
 
 ARCHETYPE_NOUNS_RAW = {"Linguistic": "Storyteller", "Logical": "Strategist", "Spatial": "Architect", "Bodily": "Pioneer", "Musical": "Maestro", "Interpersonal": "Mediator", "Intrapersonal": "Philosopher", "Naturalist": "Guardian", "Existential": "Visionary"}
-CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Divine"}
+CONSCIENCE_ADJECTIVES_RAW = {1: "Survival", 2: "Responsible", 3: "Contributing", 4: "Humanitarian", 5: "Calling"}
 MI_ORDER = ["Linguistic", "Logical", "Spatial", "Bodily", "Musical", "Interpersonal", "Intrapersonal", "Naturalist", "Existential"]
 
 # ==========================================
@@ -152,16 +163,16 @@ def analyze_data(df, lang):
         top1 = sorted(scores.items(), key=lambda x: x[1], reverse=True)[0]
         ans = str(row[cols[crisis_idx]])
         lvl = 0
+        
         if "1." in ans or "Survival" in ans or "생존" in ans: lvl = 1
         elif "2." in ans or "Responsibility" in ans or "책임" in ans: lvl = 2
         elif "3." in ans or "Contribution" in ans or "공헌" in ans: lvl = 3
         elif "4." in ans or "Humanity" in ans or "인류애" in ans: lvl = 4
-        elif "5." in ans or "Divinity" in ans or "소명" in ans: lvl = 5
+        elif "5." in ans or "Divinity" in ans or "Calling" in ans or "소명" in ans: lvl = 5
         
         raw_adj = CONSCIENCE_ADJECTIVES_RAW.get(lvl, "Shadow")
         raw_noun = ARCHETYPE_NOUNS_RAW.get(top1[0], "Explorer")
         
-        # [수정] 이제 t["adjectives"]와 t["archetypes"]가 KR/English 모두에 존재하므로 에러 안 남
         adj = t["adjectives"].get(raw_adj, raw_adj)
         noun = t["archetypes"].get(raw_noun, raw_noun)
         
@@ -182,7 +193,7 @@ st.sidebar.title("🧬 CBMID Engine")
 language = st.sidebar.radio("Language / 언어", ["English", "KR"], index=0)
 t = TEXT[language]
 
-st.sidebar.info(f"System Ready (v4.0)")
+st.sidebar.info(f"System Ready (v5.5)")
 
 uploaded_files = st.sidebar.file_uploader(t['upload_label'], accept_multiple_files=True, type="csv", key="csv_uploader")
 
@@ -249,7 +260,7 @@ else:
             elif 'Mathfinder' in name: txt_color, weight = 'black', 'bold'; off_x, off_y, ha = 0.8, -0.2, 'left'
             elif 'ped0' in name.lower(): txt_color, weight, prefix = 'red', 'bold', "[!] "; off_x, off_y, ha = -0.8, 0, 'right'
             elif 'HSW' in name: txt_color, weight = '#8E44AD', 'bold'; off_y = 0.45
-            elif 'Nami' in name: off_x, off_y, ha = 0, -0.5, 'center' 
+            elif 'Nami' in name: off_x, off_y, ha = -0.5, -0.2, 'right'  # [수정됨] Mathfinder와 같은 높이(-0.2) + 왼쪽 배치
                 
             ax.text(x+off_x, y+off_y, prefix+name, color=txt_color, weight=weight, ha=ha, fontsize=11,
                     bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', pad=1.5))
